@@ -1,0 +1,31 @@
+app = "shappno-vps"
+primary_region = "fra"
+
+[build]
+  builder = "paketobuildpacks/builder:base"
+
+[env]
+  PORT = "8080"
+  PLATFORM = "fly"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+    
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+[[services.tcp_checks]]
+  interval = 15000
+  timeout = 5000
+  grace_period = 30000

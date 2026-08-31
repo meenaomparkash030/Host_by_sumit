@@ -1,0 +1,16 @@
+{
+  "name": "shappno-vps",
+  "version": "11.0.0",
+  "description": "SHAPPNO VPS - Ultimate Hosting Platform",
+  "scripts": {
+    "start": "gunicorn --worker-class sync --workers 2 --bind 0.0.0.0:$PORT app:app",
+    "dev": "python app.py"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.7.2",
+    "chart.js": "^4.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
