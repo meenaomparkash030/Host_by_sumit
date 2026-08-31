@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — Admin Redeem</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#8b5cf6;--ac-dim:#8b5cf688;--ac-lite:#8b5cf611;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#05000a;color:#e5e7eb;font-family:'JetBrains Mono',monospace}
+        header{background:#0a0008;border-bottom:1px solid var(--ac-dim);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+        .logo{color:var(--ac);font-weight:800;font-size:16px;letter-spacing:2px}
+        .btn{padding:6px 13px;border-radius:7px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid;text-decoration:none;font-weight:700}
+        .btn-ac{border-color:var(--ac-dim);color:var(--ac);background:transparent}
+        .btn-ac:hover{background:var(--ac-lite)}
+        .btn-red{border-color:#ef444488;color:#ef4444;background:transparent}
+        .btn-red:hover{background:#ef444411}
+        main{padding:20px;max-width:1200px;margin:0 auto}
+        .section{background:#0a0008;border:1px solid #1a0a1a;border-radius:12px;padding:16px;margin-bottom:16px;overflow-x:auto}
+        .section-title{font-size:13px;font-weight:700;color:var(--ac);margin-bottom:12px;letter-spacing:1px}
+        table{width:100%;font-size:12px;border-collapse:collapse;min-width:500px}
+        th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #1a0a1a}
+        th{color:#4b5563;font-weight:700;letter-spacing:1px}
+        .badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+        .badge.active{background:#22c55e22;color:#22c55e}
+        .badge.inactive{background:#ef444422;color:#ef4444}
+        .badge.used{background:#fbbf2422;color:#fbbf24}
+        .form-inline{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+        .form-inline input{flex:1;padding:6px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#e5e7eb;font-family:inherit;font-size:12px;outline:none;min-width:80px}
+        .form-inline input:focus{border-color:var(--ac)}
+        .code-box{background:#1a001a;padding:8px 14px;border-radius:6px;border:1px solid var(--ac-dim);font-size:14px;color:var(--ac);font-weight:700;display:inline-block;margin-top:8px}
+        .btn-sm{padding:3px 8px;border-radius:4px;border:1px solid;font-family:inherit;font-size:9px;cursor:pointer;background:transparent;margin:2px}
+        .btn-sm.gold{border-color:#fbbf24;color:#fbbf24}
+        .btn-sm.green{border-color:#22c55e;color:#22c55e}
+        .btn-sm.red{border-color:#ef4444;color:#ef4444}
+        .platform-tag{position:fixed;bottom:10px;left:20px;font-size:9px;color:var(--ac-dim);opacity:.3}
+    </style>
+</head>
+<body>
+    <div class="platform-tag">🚀 {{ platform|upper }} DEPLOY</div>
+    <header>
+        <span class="logo">🎫 SHAPPNO REDEEM</span>
+        <div>
+            <a href="/admin" class="btn btn-ac">← Admin</a>
+            <a href="/dashboard" class="btn btn-ac" style="margin-left:8px">Dashboard</a>
+            <a href="/logout" class="btn btn-red" style="margin-left:8px">Logout</a>
+        </div>
+    </header>
+    
+    <main>
+        <div class="section">
+            <div class="section-title">🎫 GENERATE REDEEM CODE</div>
+            <div class="form-inline">
+                <input type="number" id="redeemAmount" placeholder="Amount" value="10" style="max-width:120px">
+                <input type="number" id="redeemMaxUses" placeholder="Max Uses" value="1" style="max-width:100px">
+                <input type="number" id="redeemExpires" placeholder="Expires (days)" value="30" style="max-width:100px">
+                <button class="btn btn-ac" onclick="generateRedeem()">Generate</button>
+            </div>
+            <div id="newCodeResult" style="display:none;margin-top:10px;padding:12px;background:var(--ac-lite);border-radius:8px;border:1px solid var(--ac-dim)">
+                <span style="color:#6b7280">New Code:</span>
+                <span id="newCodeDisplay" style="color:var(--ac);font-size:18px;font-weight:800;letter-spacing:2px"></span>
+                <span id="newCodeAmount" style="color:#fbbf24;margin-left:12px"></span>
+                <button class="btn-sm gold" onclick="copyNewCode()">📋 Copy</button>
+                <button class="btn-sm green" onclick="location.reload()">✅ Done</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📋 ALL REDEEM CODES</div>
+            <table>
+                <tr><th>Code</th><th>Amount</th><th>Uses</th><th>Created By</th><th>Created</th><th>Expires</th><th>Status</th></tr>
+                {% for c in codes %}
+                <tr>
+                    <td style="color:var(--ac);font-weight:700;font-size:13px">{{ c[1] }}</td>
+                    <td>${{ "%.2f"|format(c[2]) }}</td>
+                    <td>{{ c[6] }}/{{ c[5] }}</td>
+                    <td>{{ c[3] }}</td>
+                    <td>{{ c[4][:10] }}</td>
+                    <td>{{ c[4] and c[4][:10] or 'Never' }}</td>
+                    <td>{% if c[7] %}<span class="badge active">Active</span>{% else %}<span class="badge inactive">Inactive</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📊 REDEEM HISTORY</div>
+            <table>
+                <tr><th>Code</th><th>User</th><th>Amount</th><th>Redeemed At</th></tr>
+                {% for h in history %}
+                <tr>
+                    <td style="color:var(--ac)">{{ h[1] }}</td>
+                    <td>{{ h[2] }}</td>
+                    <td style="color:#22c55e">+${{ "%.2f"|format(h[3]) }}</td>
+                    <td>{{ h[4][:16] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </main>
+    
+    <script>
+        async function generateRedeem() {
+            const amount = parseFloat(document.getElementById('redeemAmount').value);
+            const max_uses = parseInt(document.getElementById('redeemMaxUses').value);
+            const expires_in = parseInt(document.getElementById('redeemExpires').value);
+            if (!amount || amount <= 0) return alert('Enter valid amount');
+            
+            const r = await fetch('/admin/redeem/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, max_uses, expires_in })
+            });
+            const d = await r.json();
+            if (d.success) {
+                document.getElementById('newCodeDisplay').textContent = d.code;
+                document.getElementById('newCodeAmount').textContent = '$' + d.amount;
+                document.getElementById('newCodeResult').style.display = 'block';
+            } else alert('Error: ' + d.error);
+        }
+        
+        function copyNewCode() {
+            const code = document.getElementById('newCodeDisplay').textContent;
+            navigator.clipboard.writeText(code);
+            alert('Copied: ' + code);
+        }
+        
+        let hue = 270;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+    </script>
+</body>
+</html>

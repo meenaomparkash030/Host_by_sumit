@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — 2FA Verify</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#ef4444;--ac-dim:#ef444488;--ac-lite:#ef444411;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#05000a;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
+        .card{background:#0a0008;border:2px solid var(--ac);border-radius:16px;padding:40px;width:380px;max-width:95%;box-shadow:0 0 40px var(--ac-lite)}
+        .logo{text-align:center;font-size:20px;font-weight:800;color:var(--ac);letter-spacing:3px;margin-bottom:8px}
+        .sub{text-align:center;font-size:11px;color:var(--ac-dim);letter-spacing:2px;margin-bottom:20px}
+        .error{background:#2a0808;border:1px solid #ef4444;border-radius:8px;padding:10px 14px;font-size:12px;color:#f87171;margin-bottom:14px}
+        .info{background:var(--ac-lite);border:1px solid var(--ac-dim);border-radius:8px;padding:12px 16px;font-size:12px;color:#9ca3af;margin-bottom:16px;text-align:center}
+        input{width:100%;padding:12px 14px;background:#0d000d;border:1px solid var(--ac-dim);border-radius:9px;color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:4px}
+        input:focus{border-color:var(--ac)}
+        .btn{width:100%;padding:14px;background:transparent;border:2px solid var(--ac);border-radius:9px;color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer;transition:all .15s}
+        .btn:hover{background:var(--ac-lite);box-shadow:0 0 26px var(--ac-dim)}
+        .footer{text-align:center;margin-top:16px;font-size:10px;color:var(--ac-dim);opacity:.55}
+        .platform-tag{position:fixed;top:14px;right:18px;font-size:9px;letter-spacing:2px;color:var(--ac-dim);opacity:.3}
+    </style>
+</head>
+<body>
+    <div class="platform-tag">{{ platform|upper }} MODE</div>
+    <div class="card">
+        <div class="logo">🔐 SHAPPNO VPS</div>
+        <div class="sub">TWO-FACTOR VERIFICATION</div>
+        
+        <div class="info">📱 Enter the 6-digit code from your authenticator app</div>
+        
+        {% if error %}
+        <div class="error">▲ {{ error }}</div>
+        {% endif %}
+        
+        <form method="POST">
+            <input type="text" name="code" placeholder="000000" required autofocus maxlength="6" pattern="[0-9]{6}">
+            <button type="submit" class="btn">&gt;_ VERIFY</button>
+        </form>
+        
+        <div class="footer">🔒 Protected by two-factor authentication</div>
+    </div>
+    
+    <script>
+        let hue = 0;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+        
+        // Auto-focus and auto-submit after 6 digits
+        document.querySelector('input[name="code"]').addEventListener('input', function(e) {
+            if (this.value.length === 6) {
+                this.form.submit();
+            }
+        });
+    </script>
+</body>
+</html>

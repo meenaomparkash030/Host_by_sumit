@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ server_name }} | SHAPPNO VPS</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#ef4444;--ac-dim:#ef444488;--ac-lite:#ef444411;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#06010f;color:#e5e7eb;font-family:'JetBrains Mono',monospace;min-height:100vh}
+        header{background:#0a0015;border-bottom:1px solid var(--ac-dim);padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;flex-wrap:wrap}
+        .back{background:transparent;border:1px solid #2a2a2a;color:#6b7280;width:32px;height:32px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:16px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+        .back:hover{background:#1a1a1a;color:#fff}
+        .header-info{flex:1}
+        .server-title{font-size:16px;font-weight:700;color:#fff;margin-right:10px}
+        .status-badge{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid}
+        .status-badge.running{border-color:var(--ac);color:var(--ac);box-shadow:0 0 8px var(--ac-lite)}
+        .status-badge.stopped{border-color:#ef4444;color:#ef4444}
+        .sub{font-size:11px;color:#4b5563;margin-top:2px}
+        .btn{padding:8px 14px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:2px solid;background:transparent;transition:all .2s}
+        .btn-ac{border-color:var(--ac);color:var(--ac)}
+        .btn-ac:hover{background:var(--ac-lite);box-shadow:0 0 10px var(--ac-dim)}
+        .btn-red{border-color:#ef4444;color:#ef4444}
+        .btn-red:hover{background:#ef444411}
+        main{padding:20px;max-width:900px;margin:0 auto}
+        .tabs{display:flex;gap:3px;background:#0d000d;border:1px solid #1a0a1a;border-radius:8px;padding:4px;width:fit-content;margin-bottom:20px;flex-wrap:wrap}
+        .tab{padding:7px 16px;border-radius:6px;border:none;font-family:inherit;font-size:12px;cursor:pointer;background:transparent;color:#6b7280;transition:all .2s}
+        .tab.active{background:#1a001a;color:var(--ac);text-shadow:0 0 8px var(--ac)}
+        .tab-panel{display:none}
+        .tab-panel.active{display:block}
+        .upload-zone{border:2px dashed #2a2a2a;border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#0a0015;transition:all .2s;margin-bottom:14px}
+        .upload-zone:hover,.upload-zone.drag{border-color:var(--ac);background:var(--ac-lite)}
+        .upload-icon{font-size:32px;margin-bottom:8px;opacity:.5}
+        .upload-title{font-size:14px;color:#6b7280}
+        .upload-sub{font-size:11px;color:#374151;margin-top:4px}
+        .card{background:#0a0015;border:1px solid #1a0a2a;border-radius:10px;overflow:hidden}
+        .card-header{padding:9px 14px;border-bottom:1px solid #1a0a2a;font-size:11px;color:#4b5563;display:flex;align-items:center;justify-content:space-between}
+        .file-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #0d0d0d;font-size:12px}
+        .file-row:last-child{border-bottom:none}
+        .file-name{flex:1;color:#9ca3af}
+        .file-name.main{color:var(--ac)}
+        .file-size{color:#374151;font-size:11px}
+        .main-tag{font-size:10px;color:var(--ac);border:1px solid var(--ac-dim);border-radius:4px;padding:1px 6px;margin-left:8px}
+        .pkg-row-outer{padding:16px;background:#0a0015;border:1px solid #1a0a2a;border-radius:10px;margin-bottom:12px}
+        .pkg-input-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+        input.pkg-input{padding:9px 12px;background:#111;border:1px solid #2a2a2a;border-radius:8px;color:#e5e7eb;font-family:inherit;font-size:13px;outline:none;flex:1;min-width:120px}
+        input.pkg-input:focus{border-color:var(--ac)}
+        .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+        .chip{padding:5px 10px;border-radius:6px;font-size:11px;border:1px solid #2a2a2a;color:#6b7280;cursor:pointer;transition:all .15s;background:transparent}
+        .chip:hover{border-color:var(--ac);color:var(--ac);background:var(--ac-lite)}
+        .chip.installed{border-color:var(--ac-dim);color:var(--ac);background:var(--ac-lite);cursor:default}
+        .pkg-list-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #0d0d0d;font-size:12px}
+        .pkg-list-row:last-child{border-bottom:none}
+        .pkg-name{flex:1;color:#d1d5db}
+        .settings-card{background:#0a0015;border:1px solid #1a0a2a;border-radius:10px;padding:18px;margin-bottom:14px}
+        .form-group{margin-bottom:14px}
+        .form-label{font-size:11px;color:#6b7280;display:block;margin-bottom:6px;letter-spacing:1px}
+        .env-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+        .env-row input{flex:1;min-width:80px;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#e5e7eb;font-family:inherit;font-size:12px;outline:none}
+        .env-row input:focus{border-color:var(--ac)}
+        .log-box{background:#0a0015;border:1px solid #1a0a2a;border-radius:10px;overflow:hidden}
+        pre.log-content{font-family:inherit;font-size:12px;color:var(--ac);padding:16px;min-height:200px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;margin:0}
+        .btn-sm{padding:4px 10px;border-radius:4px;border:1px solid;font-family:inherit;font-size:10px;cursor:pointer;background:transparent}
+        .btn-sm.danger{border-color:#ef4444;color:#ef4444}
+        .btn-sm.success{border-color:#22c55e;color:#22c55e}
+        .btn-sm.warning{border-color:#fbbf24;color:#fbbf24}
+        .github-row{background:#0a0015;border:1px solid #1a0a2a;border-radius:10px;padding:14px;margin-bottom:12px}
+        .github-row input{flex:1;min-width:120px}
+        .alert-item{background:#2a0808;border-left:3px solid #ef4444;padding:6px 12px;margin-bottom:4px;font-size:11px;color:#f87171}
+        .alert-item.info{background:#082a2a;border-left-color:#22c55e;color:#6ee7b7}
+        .alert-item.warning{background:#2a2a08;border-left-color:#fbbf24;color:#fcd34d}
+        #toast{position:fixed;bottom:20px;right:20px;background:#0a0015;border:1px solid var(--ac);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--ac);transform:translateY(80px);opacity:0;transition:all .3s;z-index:200;box-shadow:0 0 20px var(--ac-lite)}
+        #toast.show{transform:translateY(0);opacity:1}
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/dashboard" class="back">←</a>
+        <div class="header-info">
+            <div>
+                <span class="server-title">{{ server_name.upper() }}</span>
+                <span class="status-badge {{ config.status }}">{{ config.status.upper() }}</span>
+            </div>
+            <div class="sub">{{ config.runtime }} · {{ config.main_file or 'no main file' }}</div>
+        </div>
+        <div>
+            {% if config.status == 'running' %}
+            <button class="btn btn-red" onclick="stopServer()">■ Stop</button>
+            {% else %}
+            <button class="btn btn-ac" onclick="startServer()">▶ Start</button>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('files',this)">📁 FILES</button>
+            <button class="tab" onclick="switchTab('packages',this)">📦 PACKAGES</button>
+            <button class="tab" onclick="switchTab('settings',this)">⚙️ SETTINGS</button>
+            <button class="tab" onclick="switchTab('logs',this)">📋 LOGS</button>
+            <button class="tab" onclick="switchTab('deploy',this)">🚀 DEPLOY</button>
+        </div>
+
+        <!-- FILES -->
+        <div id="tab-files" class="tab-panel active">
+            <div class="upload-zone" id="dropZone" onclick="document.getElementById('fi').click()">
+                <input type="file" id="fi" accept=".zip,.py,.js,.php,.html,.css" hidden onchange="handleUpload(this.files[0])">
+                <div class="upload-icon">📁</div>
+                <div class="upload-title">Click or drag to upload ZIP / .py / .js / .php</div>
+                <div class="upload-sub">Supports: .zip, .py, .js, .php, .html, .css</div>
+            </div>
+            {% if config.main_file %}
+            <div style="background:var(--ac-lite);border:1px solid var(--ac-dim);border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:12px">
+                <span style="opacity:.6">✓ Main:</span>
+                <span style="color:var(--ac)">{{ config.main_file }}</span>
+            </div>
+            {% endif %}
+            {% if files %}
+            <div class="card">
+                <div class="card-header">{{ files|length }} FILE(S)</div>
+                {% for f in files %}
+                <div class="file-row">
+                    <span>{{ '📂' if f.type == 'dir' else '📄' }}</span>
+                    <span class="file-name {% if f.path == config.main_file %}main{% endif %}">
+                        {{ f.path }}{% if f.path == config.main_file %}<span class="main-tag">main</span>{% endif %}
+                    </span>
+                    {% if f.type == 'file' %}<span class="file-size">{{ '%.1f'|format(f.size/1024) }}kb</span>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:40px;color:#374151;font-size:13px">No files uploaded yet</div>
+            {% endif %}
+        </div>
+
+        <!-- PACKAGES -->
+        <div id="tab-packages" class="tab-panel">
+            <div class="pkg-row-outer">
+                <div style="font-size:11px;color:#4b5563;letter-spacing:1px;margin-bottom:14px">INSTALL PACKAGE</div>
+                <div class="pkg-input-row">
+                    <input type="text" id="pkgName" class="pkg-input" placeholder="Package name" onkeydown="if(event.key==='Enter')installPkg()">
+                    <input type="text" id="pkgVer" class="pkg-input" placeholder="Version (opt.)" style="max-width:140px">
+                    <button class="btn btn-ac" style="padding:9px 14px;font-size:12px" onclick="installPkg()">+ Install</button>
+                </div>
+                <div class="chips">
+                    {% set pkgs = ['flask','fastapi','django','requests','pandas','numpy','express','lodash','axios','laravel','symfony'] %}
+                    {% set installed_names = config.packages|map(attribute='name')|list %}
+                    {% for p in pkgs %}
+                    <span class="chip {% if p in installed_names %}installed{% endif %}" onclick="{% if p not in installed_names %}installPkg('{{ p }}'){% endif %}">{% if p in installed_names %}✓ {% endif %}{{ p }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">{{ config.packages|length }} INSTALLED</div>
+                {% if config.packages %}
+                {% for pkg in config.packages %}
+                <div class="pkg-list-row">
+                    <span>📦</span>
+                    <span class="pkg-name">{{ pkg.name }}{% if pkg.version %} v{{ pkg.version }}{% endif %}</span>
+                    <button class="btn-sm danger" onclick="removePkg('{{ pkg.name }}')">Remove</button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div style="padding:24px;text-align:center;color:#374151;font-size:13px">No packages installed</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="tab-settings" class="tab-panel">
+            <div class="settings-card">
+                <div style="font-size:11px;color:#4b5563;letter-spacing:1px;margin-bottom:16px">PROJECT SETTINGS</div>
+                <div class="form-group">
+                    <label class="form-label">MAIN FILE</label>
+                    <input type="text" id="mainFile" class="form-input" value="{{ config.main_file or '' }}" placeholder="main.py" style="width:100%">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PORT</label>
+                    <input type="number" id="serverPort" class="form-input" value="{{ config.port or 8080 }}" style="max-width:140px">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AUTO RESTART</label>
+                    <select id="autoRestart" class="form-input" style="max-width:140px">
+                        <option value="0">Disabled</option>
+                        <option value="1" selected>Enabled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ENVIRONMENT VARIABLES</label>
+                    {% for key, val in env_vars.items() %}
+                    <div class="env-row">
+                        <input type="text" placeholder="KEY" value="{{ key }}" class="env-key" style="flex:0.3">
+                        <input type="text" placeholder="VALUE" value="{{ val }}" class="env-val" style="flex:0.7">
+                        <button type="button" class="btn-sm danger" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                    {% endfor %}
+                    <div id="envContainer">
+                        <div class="env-row">
+                            <input type="text" placeholder="KEY" class="env-key" style="flex:0.3">
+                            <input type="text" placeholder="VALUE" class="env-val" style="flex:0.7">
+                            <button type="button" class="btn-sm danger" onclick="this.parentElement.remove()">✕</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-sm success" onclick="addEnvRow()">+ Add Variable</button>
+                </div>
+                <button class="btn btn-ac" style="padding:10px 20px;font-size:13px;letter-spacing:1px" onclick="saveSettings()">SAVE SETTINGS</button>
+            </div>
+        </div>
+
+        <!-- LOGS -->
+        <div id="tab-logs" class="tab-panel">
+            <div class="log-box">
+                <div class="card-header">
+                    <span>OUTPUT LOGS</span>
+                    <div style="display:flex;gap:6px">
+                        <button class="btn-sm danger" onclick="clearLogs()">🗑 Clear</button>
+                        <button class="btn-sm success" onclick="loadLogs()">↻ Refresh</button>
+                    </div>
+                </div>
+                <pre class="log-content" id="logContent">Loading logs...</pre>
+            </div>
+        </div>
+
+        <!-- DEPLOY -->
+        <div id="tab-deploy" class="tab-panel">
+            <div class="github-row">
+                <div style="font-size:11px;color:#4b5563;letter-spacing:1px;margin-bottom:12px">🚀 DEPLOY FROM GITHUB</div>
+                <div class="pkg-input-row">
+                    <input type="text" id="repoUrl" class="pkg-input" placeholder="GitHub Repo URL" style="flex:2">
+                    <input type="text" id="repoBranch" class="pkg-input" placeholder="Branch" value="main" style="max-width:100px">
+                    <button class="btn btn-ac" onclick="deployFromGitHub()">Deploy</button>
+                </div>
+            </div>
+            
+            <div class="github-row">
+                <div style="font-size:11px;color:#4b5563;letter-spacing:1px;margin-bottom:12px">🌐 CUSTOM DOMAIN</div>
+                <div class="pkg-input-row">
+                    <input type="text" id="domainName" class="pkg-input" placeholder="your-domain.com" style="flex:1">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280">
+                        <input type="checkbox" id="sslEnabled"> SSL
+                    </label>
+                    <button class="btn btn-ac" onclick="addDomain()">Add Domain</button>
+                </div>
+            </div>
+            
+            {% if alerts %}
+            <div style="margin-top:12px">
+                <div style="font-size:11px;color:#4b5563;margin-bottom:6px">⚠️ ALERTS</div>
+                {% for a in alerts %}
+                <div class="alert-item {{ a.severity }}">{{ a.message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <div id="toast"></div>
+
+    <script>
+        const S='{{ server_name }}';
+        const AC=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim();
+        
+        function toast(msg,color){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=color||AC;t.style.color=color||AC;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+        
+        function switchTab(name,el){
+            document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            document.getElementById('tab-'+name).classList.add('active');
+            el.classList.add('active');
+            if(name==='logs') loadLogs();
+        }
+        
+        function addEnvRow(){
+            const container=document.getElementById('envContainer');
+            const row=document.createElement('div');
+            row.className='env-row';
+            row.innerHTML=`
+                <input type="text" placeholder="KEY" class="env-key" style="flex:0.3">
+                <input type="text" placeholder="VALUE" class="env-val" style="flex:0.7">
+                <button type="button" class="btn-sm danger" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(row);
+        }
+        
+        const dz=document.getElementById('dropZone');
+        dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
+        dz.ondragleave=()=>dz.classList.remove('drag');
+        dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');handleUpload(e.dataTransfer.files[0])};
+        
+        async function handleUpload(f){
+            if(!f)return;
+            const fd=new FormData();fd.append('file',f);
+            toast('Uploading...');
+            const r=await fetch('/server/'+S+'/upload',{method:'POST',body:fd});
+            const d=await r.json();
+            if(d.success){toast('Uploaded '+d.files.length+' files');setTimeout(()=>location.reload(),1200);}
+            else toast(d.error||'Upload failed','#ef4444');
+        }
+        
+        async function installPkg(name){
+            const n=name||document.getElementById('pkgName').value.trim();
+            const v=document.getElementById('pkgVer')?.value.trim()||'';
+            if(!n){toast('Enter package name','#ef4444');return;}
+            toast('Installing '+n+'...');
+            const r=await fetch('/server/'+S+'/packages/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,version:v})});
+            const d=await r.json();
+            if(d.success){toast('Installed '+d.package);setTimeout(()=>location.reload(),1200);}
+            else toast('Failed: '+d.error,'#ef4444');
+        }
+        
+        async function removePkg(name){
+            if(!confirm('Remove '+name+'?'))return;
+            await fetch('/server/'+S+'/packages/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+            toast('Removed '+name);setTimeout(()=>location.reload(),1000);
+        }
+        
+        async function saveSettings(){
+            const mf=document.getElementById('mainFile').value.trim();
+            const port=parseInt(document.getElementById('serverPort').value)||8080;
+            const autoRestart=parseInt(document.getElementById('autoRestart').value)||0;
+            
+            const envKeys=document.querySelectorAll('.env-key');
+            const envVals=document.querySelectorAll('.env-val');
+            const envVars={};
+            envKeys.forEach((k,i)=>{if(k.value.trim())envVars[k.value.trim()]=envVals[i]?.value.trim()||'';});
+            
+            const r=await fetch('/server/'+S+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({main_file:mf,port,auto_restart,env_vars:envVars})});
+            const d=await r.json();
+            if(d.success){toast('Settings saved');setTimeout(()=>location.reload(),1000);}
+            else toast(d.error||'Error','#ef4444');
+        }
+        
+        async function startServer(){
+            const r=await fetch('/server/'+S+'/start',{method:'POST'});
+            const d=await r.json();
+            if(d.success){toast('Server started');setTimeout(()=>location.reload(),1200);}
+            else toast(d.error||'Failed to start','#ef4444');
+        }
+        
+        async function stopServer(){
+            const r=await fetch('/server/'+S+'/stop',{method:'POST'});
+            const d=await r.json();
+            if(d.success){toast('Server stopped');setTimeout(()=>location.reload(),1000);}
+        }
+        
+        async function loadLogs(){
+            try{
+                const r=await fetch('/server/'+S+'/logs');
+                const d=await r.json();
+                document.getElementById('logContent').textContent=d.logs||'No logs yet.';
+            }catch(e){}
+        }
+        
+        async function clearLogs(){
+            if(!confirm('Clear all logs?'))return;
+            await fetch('/server/'+S+'/logs/clear',{method:'POST'});
+            document.getElementById('logContent').textContent='Logs cleared.';
+            toast('Logs cleared');
+        }
+        
+        async function deployFromGitHub(){
+            const repoUrl=document.getElementById('repoUrl').value.trim();
+            const branch=document.getElementById('repoBranch').value.trim()||'main';
+            if(!repoUrl){toast('Enter GitHub repo URL','#ef4444');return;}
+            toast('Deploying from GitHub...');
+            const r=await fetch('/server/'+S+'/github/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({repo_url:repoUrl,branch})});
+            const d=await r.json();
+            if(d.success){toast('Deployed successfully!');setTimeout(()=>location.reload(),1500);}
+            else toast('Deploy failed: '+d.error,'#ef4444');
+        }
+        
+        async function addDomain(){
+            const domain=document.getElementById('domainName').value.trim();
+            const ssl=document.getElementById('sslEnabled').checked;
+            if(!domain){toast('Enter a domain','#ef4444');return;}
+            const r=await fetch('/server/'+S+'/domain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain,ssl})});
+            const d=await r.json();
+            if(d.success){toast('Domain added: '+domain);}
+            else toast('Failed: '+d.error,'#ef4444');
+        }
+        
+        const urlTab=new URLSearchParams(location.search).get('tab');
+        if(urlTab){const btn=document.querySelector(`.tab[onclick*="${urlTab}"]`);if(btn)btn.click();}
+        
+        let hue=0;
+        setInterval(()=>{
+            hue=(hue+6)%360;
+            const ac=`hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac',ac);
+            document.documentElement.style.setProperty('--ac-dim',`hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite',`hsla(${hue},90%,58%,0.10)`);
+        },100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — 2FA Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#ef4444;--ac-dim:#ef444488;--ac-lite:#ef444411;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#05000a;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
+        .card{background:#0a0008;border:2px solid var(--ac);border-radius:16px;padding:40px;width:420px;max-width:95%;box-shadow:0 0 40px var(--ac-lite)}
+        .logo{text-align:center;font-size:20px;font-weight:800;color:var(--ac);letter-spacing:3px;margin-bottom:8px}
+        .sub{text-align:center;font-size:11px;color:var(--ac-dim);letter-spacing:2px;margin-bottom:20px}
+        .qr-container{text-align:center;margin:16px 0;padding:16px;background:#0d000d;border-radius:12px;border:1px solid var(--ac-dim)}
+        .qr-container img{max-width:180px;border-radius:8px}
+        .secret-box{background:#111;padding:12px;border-radius:8px;font-size:14px;color:var(--ac);text-align:center;letter-spacing:2px;margin:12px 0;border:1px solid var(--ac-dim);cursor:pointer}
+        .secret-box:hover{background:#1a0a1a}
+        .error{background:#2a0808;border:1px solid #ef4444;border-radius:8px;padding:10px 14px;font-size:12px;color:#f87171;margin-bottom:14px}
+        input{width:100%;padding:12px 14px;background:#0d000d;border:1px solid var(--ac-dim);border-radius:9px;color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;margin-bottom:12px}
+        input:focus{border-color:var(--ac)}
+        .btn{width:100%;padding:14px;background:transparent;border:2px solid var(--ac);border-radius:9px;color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer;transition:all .15s}
+        .btn:hover{background:var(--ac-lite);box-shadow:0 0 26px var(--ac-dim)}
+        .btn-secondary{border-color:#333;color:#6b7280}
+        .btn-secondary:hover{background:#111}
+        .footer{text-align:center;margin-top:16px;font-size:10px;color:var(--ac-dim);opacity:.55}
+        .steps{margin:16px 0;font-size:12px;color:#9ca3af;line-height:2}
+        .steps strong{color:var(--ac)}
+        .platform-tag{position:fixed;top:14px;right:18px;font-size:9px;letter-spacing:2px;color:var(--ac-dim);opacity:.3}
+    </style>
+</head>
+<body>
+    <div class="platform-tag">{{ platform|upper }} MODE</div>
+    <div class="card">
+        <div class="logo">🔐 SHAPPNO VPS</div>
+        <div class="sub">TWO-FACTOR AUTHENTICATION</div>
+        
+        {% if error %}
+        <div class="error">▲ {{ error }}</div>
+        {% endif %}
+        
+        <div class="steps">
+            <strong>Step 1:</strong> Scan QR code with Google Authenticator<br>
+            <strong>Step 2:</strong> Enter the 6-digit code below<br>
+            <strong>Step 3:</strong> Click Verify to enable 2FA
+        </div>
+        
+        <div class="qr-container">
+            <img src="/2fa/qr/{{ secret }}" alt="QR Code">
+        </div>
+        
+        <div class="secret-box" onclick="copySecret()">
+            {{ secret }}
+        </div>
+        
+        <form method="POST">
+            <input type="text" name="code" placeholder="Enter 6-digit code" required autofocus maxlength="6">
+            <button type="submit" class="btn">&gt;_ VERIFY & ENABLE</button>
+        </form>
+        
+        <div style="margin-top:12px">
+            <a href="/dashboard" class="btn btn-secondary" style="text-align:center;display:block;padding:12px;text-decoration:none;font-size:12px">← Skip for now</a>
+        </div>
+        
+        <div class="footer">🔒 Enhanced security for your account</div>
+    </div>
+    
+    <script>
+        function copySecret() {
+            const secret = document.querySelector('.secret-box').textContent.trim();
+            navigator.clipboard.writeText(secret).then(() => {
+                const box = document.querySelector('.secret-box');
+                box.textContent = '✅ Copied!';
+                setTimeout(() => box.textContent = secret, 2000);
+            });
+        }
+        
+        let hue = 0;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+    </script>
+</body>
+</html>

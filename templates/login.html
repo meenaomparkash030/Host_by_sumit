@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#ef4444;--ac-dim:#ef444488;--ac-lite:#ef444411;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#05000a;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        canvas{position:fixed;inset:0;z-index:0}
+        .container{position:relative;z-index:10;width:100%;max-width:400px;padding:20px}
+        .card{background:#0a0008;border:2px solid var(--ac);border-radius:16px;padding:40px 32px;box-shadow:0 0 60px var(--ac-lite),0 0 120px var(--ac-dim);animation:floatIn .5s ease}
+        @keyframes floatIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .brand{text-align:center;font-size:22px;font-weight:800;color:var(--ac);letter-spacing:4px;text-shadow:0 0 20px var(--ac)}
+        .sub{text-align:center;font-size:11px;color:var(--ac-dim);letter-spacing:3px;margin:6px 0 24px}
+        .prompt{font-size:13px;color:var(--ac);margin-bottom:16px;opacity:.8;display:flex;align-items:center;gap:4px}
+        .cursor{display:inline-block;width:8px;height:14px;background:var(--ac);animation:blink 1s step-end infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        .error{background:#2a0808;border:1px solid #ef4444;border-radius:8px;padding:10px 14px;font-size:12px;color:#f87171;margin-bottom:14px}
+        input{width:100%;padding:12px 14px;background:#0d000d;border:1px solid var(--ac-dim);border-radius:9px;color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s}
+        input:focus{border-color:var(--ac)}
+        input::placeholder{color:var(--ac-dim)}
+        .pw-wrap{position:relative;margin-bottom:22px}
+        .pw-wrap input{margin-bottom:0;padding-right:44px}
+        .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ac-dim);font-size:16px;padding:0}
+        .btn{width:100%;padding:14px;background:transparent;border:2px solid var(--ac);border-radius:9px;color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer;transition:all .15s}
+        .btn:hover{background:var(--ac-lite);box-shadow:0 0 26px var(--ac-dim)}
+        .footer{text-align:center;margin-top:20px;font-size:10px;color:var(--ac-dim);opacity:.55;line-height:1.8}
+        .platform-tag{position:fixed;top:14px;right:18px;font-size:9px;letter-spacing:2px;color:var(--ac-dim);opacity:.3;z-index:10}
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    <div class="platform-tag">{{ platform|upper }} MODE</div>
+    <div class="container">
+        <div class="card">
+            <div class="brand">SHAPPNO VPS</div>
+            <div class="sub">SECURE TERMINAL V3.0</div>
+            <div class="prompt">$&gt; LOGIN_REQUIRED<span class="cursor"></span></div>
+            {% if error %}
+            <div class="error">▲ {{ error }}</div>
+            {% endif %}
+            <form method="POST">
+                <input type="text" name="username" placeholder="Username" required autofocus>
+                <div class="pw-wrap">
+                    <input type="password" name="password" placeholder="Password" id="pw">
+                    <button type="button" class="eye-btn" onclick="togglePw()">👁</button>
+                </div>
+                <button type="submit" class="btn">&gt;_ AUTHENTICATE</button>
+            </form>
+            <div class="footer">Admin: admin / Password: Sumit</div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const chars = 'アイウエオカキクケコ01SHAPPNO';
+        const cols = Math.floor(canvas.width / 16);
+        const drops = Array(cols).fill(1);
+        
+        function togglePw() {
+            const p = document.getElementById('pw');
+            p.type = p.type === 'password' ? 'text' : 'password';
+        }
+        
+        let hue = 0;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+        
+        setInterval(() => {
+            const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim();
+            ctx.fillStyle = 'rgba(5,0,10,0.07)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = ac;
+            ctx.font = '13px JetBrains Mono,monospace';
+            ctx.globalAlpha = 0.22;
+            for (let i = 0; i < drops.length; i++) {
+                ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * 16, drops[i] * 16);
+                if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+            ctx.globalAlpha = 1;
+        }, 55);
+    </script>
+</body>
+</html>

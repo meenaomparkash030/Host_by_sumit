@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        :root{--ac:#ef4444;--ac-dim:#ef444488;--ac-lite:#ef444411;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#06010a;color:#e5e7eb;font-family:'JetBrains Mono',monospace;min-height:100vh}
+        header{background:#0a0008;border-bottom:1px solid var(--ac-dim);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50}
+        .logo{display:flex;align-items:center;gap:9px}
+        .logo-mark{width:30px;height:30px;border-radius:8px;border:2px solid var(--ac);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--ac);font-size:14px;box-shadow:0 0 10px var(--ac-lite)}
+        .logo-name{color:var(--ac);font-weight:800;font-size:15px;letter-spacing:2px;text-shadow:0 0 8px var(--ac)}
+        .header-stats{display:flex;gap:16px;font-size:11px;color:var(--ac-dim)}
+        .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .username{color:var(--ac);font-size:12px;opacity:.85}
+        .balance{color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer}
+        .balance:hover{text-shadow:0 0 10px #fbbf24}
+        .btn{padding:6px 13px;border-radius:7px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid;transition:all .15s;text-decoration:none;display:inline-block;font-weight:700;letter-spacing:.5px}
+        .btn-ac{border-color:var(--ac-dim);color:var(--ac);background:transparent}
+        .btn-ac:hover{background:var(--ac-lite);box-shadow:0 0 8px var(--ac-dim)}
+        .btn-red{border-color:#ef444488;color:#ef4444;background:transparent}
+        .btn-red:hover{background:#ef444411}
+        .btn-admin{border-color:#8b5cf688;color:#8b5cf6;background:transparent}
+        .btn-admin:hover{background:#8b5cf611}
+        .btn-gold{border-color:#fbbf2488;color:#fbbf24;background:transparent}
+        .btn-gold:hover{background:#fbbf2411}
+        main{padding:20px;max-width:1000px;margin:0 auto}
+        .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+        .stat-card{background:#0d000d;border:1px solid #1a0a1a;border-radius:14px;padding:18px;text-align:center;transition:transform .15s}
+        .stat-card:hover{transform:translateY(-2px)}
+        .stat-num{font-size:28px;font-weight:800}
+        .stat-num.ac{color:var(--ac);text-shadow:0 0 18px var(--ac)}
+        .stat-num.gold{color:#fbbf24}
+        .stat-num.white{color:#e5e7eb}
+        .stat-label{font-size:9px;color:#4b5563;letter-spacing:2px;margin-top:4px}
+        .announcement{background:var(--ac-lite);border:1px solid var(--ac-dim);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;animation:fadeIn .3s}
+        .announcement strong{color:var(--ac)}
+        .alert{background:#2a0808;border:1px solid #ef4444;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#f87171;animation:fadeIn .3s}
+        .alert strong{color:#ef4444}
+        .server-card{background:#0a0008;border:1px solid #1a0a1a;border-left:4px solid;border-radius:12px;padding:16px;margin-bottom:12px;position:relative;transition:all .15s}
+        .server-card:hover{transform:translateY(-2px);border-color:var(--ac-dim)}
+        .server-card.running{border-left-color:var(--ac)}
+        .server-card.stopped{border-left-color:#3f3f46}
+        .server-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+        .server-name{font-weight:800;font-size:14px;color:#fff;letter-spacing:.5px}
+        .status-badge{padding:2px 10px;border-radius:6px;font-size:10px;font-weight:700;border:1px solid}
+        .status-badge.running{border-color:var(--ac);color:var(--ac);box-shadow:0 0 8px var(--ac-lite)}
+        .status-badge.stopped{border-color:#52525b;color:#71717a}
+        .server-sub{font-size:11px;color:#4b5563;margin-bottom:10px}
+        .server-stats{display:flex;gap:16px;font-size:10px;color:#6b7280;margin-bottom:10px}
+        .server-stats span{display:flex;align-items:center;gap:4px}
+        .actions{display:flex;gap:6px;flex-wrap:wrap}
+        .action-btn{width:36px;height:32px;background:transparent;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid;transition:all .15s;font-family:inherit;text-decoration:none}
+        .action-btn:hover{transform:scale(1.08)}
+        .empty{text-align:center;padding:60px 20px;color:#374151}
+        .empty-icon{font-size:48px;margin-bottom:12px;opacity:.3}
+        .fab{position:fixed;bottom:28px;right:28px;width:56px;height:56px;border-radius:50%;background:var(--ac);color:#000;border:none;font-size:26px;font-weight:800;cursor:pointer;box-shadow:0 0 22px var(--ac-dim);display:flex;align-items:center;justify-content:center;z-index:50;transition:transform .15s}
+        .fab:hover{transform:scale(1.1)}
+        .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;animation:fadeIn .3s}
+        .modal-bg.show{display:flex}
+        .modal{background:#0a0008;border:2px solid var(--ac);border-radius:14px;padding:28px;width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 0 32px var(--ac-lite);animation:slideIn .3s}
+        .modal-title{font-size:14px;font-weight:800;color:var(--ac);letter-spacing:2px;margin-bottom:20px}
+        .form-group{margin-bottom:14px}
+        .form-label{font-size:11px;color:#6b7280;display:block;margin-bottom:6px;letter-spacing:1px}
+        .form-input{width:100%;padding:10px 12px;background:#111;border:1px solid var(--ac-dim);border-radius:8px;color:var(--ac);font-family:inherit;font-size:13px;outline:none}
+        .form-input:focus{border-color:var(--ac)}
+        select.form-input option{background:#0a0008;color:#e5e7eb}
+        .modal-actions{display:flex;gap:10px;margin-top:20px}
+        .modal-btn{flex:1;padding:11px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1px;border:2px solid var(--ac);background:transparent;color:var(--ac)}
+        .modal-cancel{border-color:#333!important;color:#6b7280!important}
+        .platform-tag{position:fixed;bottom:10px;left:20px;font-size:9px;color:var(--ac-dim);opacity:.3;letter-spacing:1px;z-index:50}
+        .redeem-badge{background:#fbbf2422;border:1px solid #fbbf2444;border-radius:4px;padding:2px 8px;font-size:9px;color:#fbbf24;margin-left:6px}
+        #toast{position:fixed;bottom:80px;right:20px;background:#0a0008;border:1px solid var(--ac);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--ac);transform:translateY(80px);opacity:0;transition:all .3s;z-index:200;box-shadow:0 0 20px var(--ac-lite)}
+        #toast.show{transform:translateY(0);opacity:1}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+    </style>
+</head>
+<body>
+    <div class="platform-tag">🚀 {{ platform|upper }} DEPLOY</div>
+    <header>
+        <div class="logo"><span class="logo-mark">S</span><span class="logo-name">SHAPPNO VPS</span></div>
+        <div class="header-stats">
+            <span id="statCpu">CPU: --%</span>
+            <span id="statRam">RAM: --%</span>
+            <span id="statDisk">DISK: --%</span>
+        </div>
+        <div class="header-right">
+            <span class="username">@{{ username }} ({{ plan }})</span>
+            <span class="balance" onclick="document.getElementById('balanceModal').classList.add('show')">💰 ${{ "%.2f"|format(balance) }}</span>
+            {% if redeem_codes_available > 0 %}<span class="redeem-badge">🎫 {{ redeem_codes_available }} codes</span>{% endif %}
+            {% if is_admin %}<a href="/admin" class="btn btn-admin">⚡ADMIN</a>{% endif %}
+            <a href="/logout" class="btn btn-red">LOG OUT</a>
+        </div>
+    </header>
+    
+    <main>
+        <div class="stats">
+            <div class="stat-card"><div class="stat-num ac">{{ running }}</div><div class="stat-label">RUNNING</div></div>
+            <div class="stat-card"><div class="stat-num white">{{ total }}</div><div class="stat-label">TOTAL</div></div>
+            <div class="stat-card"><div class="stat-num white">{{ max_servers }}</div><div class="stat-label">LIMIT</div></div>
+            <div class="stat-card"><div class="stat-num white" id="statUptime">--h</div><div class="stat-label">UPTIME</div></div>
+            <div class="stat-card"><div class="stat-num gold">${{ "%.2f"|format(balance) }}</div><div class="stat-label">BALANCE</div></div>
+            <div class="stat-card"><div class="stat-num gold">{{ redeem_codes_available }}</div><div class="stat-label">CODES</div></div>
+        </div>
+
+        {% if announcements %}
+        {% for a in announcements %}
+        <div class="announcement"><strong>📢 {{ a[1] }}</strong> {{ a[2] }}</div>
+        {% endfor %}
+        {% endif %}
+
+        {% if alerts %}
+        {% for a in alerts %}
+        <div class="alert"><strong>⚠️ {{ a[2] }}</strong> {{ a[3] }}</div>
+        {% endfor %}
+        {% endif %}
+
+        {% if request.args.get('error') %}
+        <div style="background:#2a0808;border:1px solid #ef4444;border-radius:8px;padding:12px;color:#f87171;margin-bottom:14px;text-align:center">{{ request.args.get('error') }}</div>
+        {% endif %}
+
+        {% if servers %}
+        {% for name, cfg in servers.items() %}
+        <div class="server-card {{ cfg.status }}" id="server-{{ name }}">
+            <div class="server-top">
+                <span class="server-name">{{ name.upper() }}</span>
+                <span class="status-badge {{ cfg.status }}">{{ cfg.status.upper() }}</span>
+            </div>
+            <div class="server-sub">{{ cfg.runtime }} · {{ cfg.main_file or 'main.py' }}</div>
+            <div class="server-stats">
+                <span>🔌 Port: {{ cfg.port or 8080 }}</span>
+                <span id="cpu-{{ name }}">⚡ CPU: --%</span>
+                <span id="mem-{{ name }}">💾 RAM: --%</span>
+            </div>
+            <div class="actions">
+                {% if cfg.status == 'running' %}
+                <form action="/server/{{ name }}/stop" method="POST" style="display:inline"><button class="action-btn" style="border-color:#ef444488;color:#ef4444">■</button></form>
+                {% else %}
+                <form action="/server/{{ name }}/start" method="POST" style="display:inline"><button class="action-btn" style="border-color:var(--ac-dim);color:var(--ac)">▶</button></form>
+                {% endif %}
+                <a href="/server/{{ name }}" class="action-btn" style="border-color:#38bdf888;color:#38bdf8">👀</a>
+                <a href="/server/{{ name }}?tab=settings" class="action-btn" style="border-color:#c084fc88;color:#c084fc">⚙️</a>
+                <form action="/server/clone/{{ name }}" method="POST" style="display:inline"><button class="action-btn" style="border-color:#fbbf2488;color:#fbbf24">📋</button></form>
+                <form action="/server/delete/{{ name }}" method="POST" style="display:inline" onsubmit="return confirm('Delete {{ name }}?')"><button class="action-btn" style="border-color:#ef444488;color:#ef4444">🗑</button></form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty"><div class="empty-icon">📂</div><div>NO PROJECTS YET...!! CLICK + TO CREATE...!!</div></div>
+        {% endif %}
+    </main>
+
+    <button class="fab" onclick="document.getElementById('createModal').classList.add('show')">+</button>
+
+    <!-- Create Modal -->
+    <div id="createModal" class="modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="modal">
+            <div class="modal-title">🚀 NEW PROJECT</div>
+            <form action="/server/create" method="POST">
+                <div class="form-group"><label class="form-label">PROJECT NAME</label><input class="form-input" name="name" placeholder="my-bot" required autofocus></div>
+                <div class="form-group"><label class="form-label">RUNTIME</label><select class="form-input" name="runtime"><option value="python">Python</option><option value="node">Node.js</option><option value="php">PHP</option><option value="static">Static</option></select></div>
+                <div class="form-group"><label class="form-label">TEMPLATE</label><select class="form-input" name="template"><option value="">None</option><option value="flask-app">Flask</option><option value="fastapi-app">FastAPI</option><option value="node-api">Node.js</option><option value="react-app">React</option><option value="php-app">PHP</option><option value="static-site">Static</option></select></div>
+                <div class="form-group"><label class="form-label">DESCRIPTION</label><input class="form-input" name="description" placeholder="What's this project about?"></div>
+                <div class="modal-actions"><button type="submit" class="modal-btn">CREATE</button><button type="button" class="modal-btn modal-cancel" onclick="document.getElementById('createModal').classList.remove('show')">CANCEL</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Redeem Modal -->
+    <div id="redeemModal" class="modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="modal">
+            <div class="modal-title">🎫 REDEEM CODE</div>
+            <div class="form-group"><label class="form-label">ENTER REDEEM CODE</label><input class="form-input" id="redeemInput" placeholder="e.g. A1B2C3D4" onkeydown="if(event.key==='Enter')redeemCode()"></div>
+            <div class="modal-actions"><button class="modal-btn" onclick="redeemCode()">REDEEM</button><button type="button" class="modal-btn modal-cancel" onclick="document.getElementById('redeemModal').classList.remove('show')">CANCEL</button></div>
+            <div id="redeemResult" style="margin-top:12px;text-align:center"></div>
+        </div>
+    </div>
+
+    <!-- Balance Modal -->
+    <div id="balanceModal" class="modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="modal">
+            <div class="modal-title">💰 BALANCE & TRANSACTIONS</div>
+            <div style="text-align:center;font-size:32px;font-weight:800;color:#fbbf24;margin-bottom:16px">${{ "%.2f"|format(balance) }}</div>
+            <div style="max-height:300px;overflow-y:auto">
+                <table style="width:100%;font-size:11px;border-collapse:collapse">
+                    <tr><th style="text-align:left;color:#4b5563">Type</th><th style="text-align:left;color:#4b5563">Amount</th><th style="text-align:left;color:#4b5563">Description</th><th style="text-align:left;color:#4b5563">Date</th></tr>
+                    {% for t in transactions[:10] %}
+                    <tr><td>{{ t[2] }}</td><td style="color:{% if t[3] >= 0 %}#22c55e{% else %}#ef4444{% endif %}">${{ "%.2f"|format(t[3]) }}</td><td>{{ t[4][:20] }}</td><td>{{ t[7][:10] }}</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="modal-actions"><button class="modal-btn" onclick="document.getElementById('balanceModal').classList.remove('show')">CLOSE</button></div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        async function redeemCode() {
+            const code = document.getElementById('redeemInput').value.trim().toUpperCase();
+            if (!code) return toast('Enter a code');
+            const r = await fetch('/redeem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const d = await r.json();
+            const result = document.getElementById('redeemResult');
+            if (d.success) {
+                result.innerHTML = `<span style="color:#22c55e">✅ Redeemed $${d.amount}! New balance: $${d.balance}</span>`;
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                result.innerHTML = `<span style="color:#ef4444">❌ ${d.error}</span>`;
+            }
+        }
+        
+        function toast(msg, color) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.borderColor = color || getComputedStyle(document.documentElement).getPropertyValue('--ac').trim();
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        async function fetchStats() {
+            try {
+                const r = await fetch('/api/stats');
+                const d = await r.json();
+                document.getElementById('statCpu').textContent = 'CPU: ' + d.cpu.toFixed(1) + '%';
+                document.getElementById('statRam').textContent = 'RAM: ' + d.ram.toFixed(1) + '%';
+                document.getElementById('statDisk').textContent = 'DISK: ' + d.disk.toFixed(1) + '%';
+                document.getElementById('statUptime').textContent = Math.floor(d.uptime / 3600) + 'h';
+            } catch(e) {}
+        }
+        fetchStats();
+        setInterval(fetchStats, 5000);
+        
+        // Socket.io
+        const socket = io();
+        socket.on('connect', () => console.log('Socket connected'));
+        socket.on('server_stats', (stats) => {
+            for (const [name, data] of Object.entries(stats)) {
+                const cpuEl = document.getElementById('cpu-' + name);
+                const memEl = document.getElementById('mem-' + name);
+                if (cpuEl) cpuEl.textContent = '⚡ CPU: ' + (data.cpu || 0).toFixed(1) + '%';
+                if (memEl) memEl.textContent = '💾 RAM: ' + (data.memory || 0).toFixed(1) + '%';
+            }
+        });
+        socket.on('new_alert', (data) => {
+            toast('⚠️ ' + data.message, '#ef4444');
+        });
+        socket.on('new_announcement', (data) => {
+            toast('📢 ' + data.title + ' - ' + data.content, '#fbbf24');
+        });
+        
+        let hue = 0;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — Coupons</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#fbbf24;--ac-dim:#fbbf2488;--ac-lite:#fbbf2411;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#05000a;font-family:'JetBrains Mono',monospace;min-height:100vh}
+        header{background:#0a0008;border-bottom:1px solid var(--ac-dim);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+        .logo{color:var(--ac);font-weight:800;font-size:16px;letter-spacing:2px}
+        .btn{padding:6px 13px;border-radius:7px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid;text-decoration:none;font-weight:700}
+        .btn-ac{border-color:var(--ac-dim);color:var(--ac);background:transparent}
+        .btn-ac:hover{background:var(--ac-lite)}
+        .btn-red{border-color:#ef444488;color:#ef4444;background:transparent}
+        .btn-red:hover{background:#ef444411}
+        main{padding:20px;max-width:1000px;margin:0 auto}
+        .coupon-card{background:#0a0008;border:2px solid var(--ac);border-radius:12px;padding:20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;transition:all .15s}
+        .coupon-card:hover{transform:translateY(-2px);box-shadow:0 0 20px var(--ac-lite)}
+        .coupon-card .code{font-size:24px;font-weight:800;color:var(--ac);letter-spacing:3px}
+        .coupon-card .discount{font-size:18px;font-weight:700;color:#22c55e}
+        .coupon-card .info{font-size:12px;color:#6b7280}
+        .coupon-card .info strong{color:#e5e7eb}
+        .coupon-card .used{color:#ef4444;font-size:12px}
+        .coupon-card .btn-use{padding:10px 24px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--ac);background:transparent;color:var(--ac);transition:all .15s}
+        .coupon-card .btn-use:hover{background:var(--ac-lite)}
+        .empty{text-align:center;padding:60px 20px;color:#374151}
+        .platform-tag{position:fixed;bottom:10px;left:20px;font-size:9px;color:var(--ac-dim);opacity:.3}
+    </style>
+</head>
+<body>
+    <div class="platform-tag">🚀 {{ platform|upper }} DEPLOY</div>
+    <header>
+        <span class="logo">🏷️ SHAPPNO COUPONS</span>
+        <div>
+            <a href="/dashboard" class="btn btn-ac">← Dashboard</a>
+            <a href="/logout" class="btn btn-red" style="margin-left:8px">Logout</a>
+        </div>
+    </header>
+    
+    <main>
+        {% if coupons %}
+        <div style="margin-bottom:16px;font-size:13px;color:#6b7280">
+            Available coupons: <strong style="color:var(--ac)">{{ coupons|length }}</strong>
+        </div>
+        
+        {% for c in coupons %}
+        <div class="coupon-card">
+            <div>
+                <div class="code">{{ c[1] }}</div>
+                <div class="discount">
+                    {% if c[2] == 'percentage' %}{{ c[3] }}% OFF{% else %}${{ "%.2f"|format(c[3]) }} OFF{% endif %}
+                </div>
+                <div class="info">
+                    Min purchase: <strong>${{ "%.2f"|format(c[4]) }}</strong>
+                    {% if c[5] > 0 %} · Max discount: <strong>${{ "%.2f"|format(c[5]) }}</strong>{% endif %}
+                    {% if c[9] %} · {{ c[9] }}{% endif %}
+                </div>
+                <div class="info">
+                    Used: {{ c[6] }}/{{ c[5] }} · Expires: {{ c[8][:10] if c[8] else 'Never' }}
+                </div>
+            </div>
+            <div style="text-align:right">
+                {% if c[6] < c[5] %}
+                <button class="btn-use" onclick="applyCoupon('{{ c[1] }}')">Use Coupon</button>
+                {% else %}
+                <span class="used">❌ Used</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty">
+            <div style="font-size:48px;margin-bottom:12px;opacity:.3">🏷️</div>
+            <div>No coupons available right now</div>
+        </div>
+        {% endif %}
+    </main>
+    
+    <script>
+        async function applyCoupon(code) {
+            const r = await fetch('/coupon/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const d = await r.json();
+            if (d.success) {
+                alert('✅ Coupon applied!');
+                location.reload();
+            } else {
+                alert('❌ ' + (d.error || 'Failed to apply coupon'));
+            }
+        }
+        
+        let hue = 45;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+    </script>
+</body>
+</html>
