@@ -117,4 +117,4 @@ function switchTab(tab, el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     if (el) el.classList.add('active');
-    }
+}
