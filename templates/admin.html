@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAPPNO VPS — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:#8b5cf6;--ac-dim:#8b5cf688;--ac-lite:#8b5cf611;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#05000a;color:#e5e7eb;font-family:'JetBrains Mono',monospace}
+        header{background:#0a0008;border-bottom:1px solid var(--ac-dim);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+        .logo{color:var(--ac);font-weight:800;font-size:18px;letter-spacing:2px}
+        .btn{padding:6px 13px;border-radius:7px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid;text-decoration:none;font-weight:700}
+        .btn-ac{border-color:var(--ac-dim);color:var(--ac);background:transparent}
+        .btn-ac:hover{background:var(--ac-lite)}
+        .btn-red{border-color:#ef444488;color:#ef4444;background:transparent}
+        .btn-red:hover{background:#ef444411}
+        .btn-gold{border-color:#fbbf2488;color:#fbbf24;background:transparent}
+        .btn-gold:hover{background:#fbbf2411}
+        .btn-green{border-color:#22c55e88;color:#22c55e;background:transparent}
+        .btn-green:hover{background:#22c55e11}
+        main{padding:20px;max-width:1400px;margin:0 auto}
+        .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+        .stat-card{background:#0d000d;border:1px solid #1a0a1a;border-radius:12px;padding:16px;text-align:center}
+        .stat-num{font-size:24px;font-weight:800}
+        .stat-num.ac{color:var(--ac)}
+        .stat-num.gold{color:#fbbf24}
+        .stat-num.green{color:#22c55e}
+        .stat-label{font-size:9px;color:#4b5563;letter-spacing:2px;margin-top:4px}
+        .section{background:#0a0008;border:1px solid #1a0a1a;border-radius:12px;padding:16px;margin-bottom:16px;overflow-x:auto}
+        .section-title{font-size:13px;font-weight:700;color:var(--ac);margin-bottom:12px;letter-spacing:1px}
+        .section-title .badge{font-size:10px;background:var(--ac-lite);padding:2px 8px;border-radius:4px;margin-left:8px}
+        table{width:100%;font-size:12px;border-collapse:collapse;min-width:600px}
+        th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #1a0a1a}
+        th{color:#4b5563;font-weight:700;letter-spacing:1px}
+        .badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+        .badge.running{background:var(--ac-lite);color:var(--ac)}
+        .badge.stopped{background:#1a1a1a;color:#6b7280}
+        .badge.admin{background:#8b5cf622;color:#8b5cf6}
+        .badge.banned{background:#ef444422;color:#ef4444}
+        .badge.paid{background:#22c55e22;color:#22c55e}
+        .badge.pending{background:#fbbf2422;color:#fbbf24}
+        .badge.active{background:#22c55e22;color:#22c55e}
+        .badge.inactive{background:#ef444422;color:#ef4444}
+        .btn-sm{padding:3px 8px;border-radius:4px;border:1px solid;font-family:inherit;font-size:9px;cursor:pointer;background:transparent;margin:2px}
+        .btn-sm.ban{border-color:#ef4444;color:#ef4444}
+        .btn-sm.unban{border-color:#22c55e;color:#22c55e}
+        .btn-sm.admin{border-color:#8b5cf6;color:#8b5cf6}
+        .btn-sm.gold{border-color:#fbbf24;color:#fbbf24}
+        .btn-sm.green{border-color:#22c55e;color:#22c55e}
+        .form-inline{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+        .form-inline input,.form-inline select{flex:1;padding:6px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#e5e7eb;font-family:inherit;font-size:12px;outline:none;min-width:80px}
+        .form-inline input:focus,.form-inline select:focus{border-color:var(--ac)}
+        .log-box{background:#0a0015;border:1px solid #1a0a2a;border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;font-size:11px;font-family:inherit;color:#9ca3af}
+        .log-box div{border-bottom:1px solid #0d0d0d;padding:4px 0}
+        .tabs{display:flex;gap:3px;background:#0d000d;border:1px solid #1a0a1a;border-radius:8px;padding:4px;width:fit-content;margin-bottom:16px;flex-wrap:wrap}
+        .tab{padding:7px 16px;border-radius:6px;border:none;font-family:inherit;font-size:12px;cursor:pointer;background:transparent;color:#6b7280;transition:all .2s}
+        .tab.active{background:#1a001a;color:var(--ac);text-shadow:0 0 8px var(--ac)}
+        .tab-panel{display:none}
+        .tab-panel.active{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    </style>
+</head>
+<body>
+    <header>
+        <span class="logo">⚡ SHAPPNO ADMIN</span>
+        <div>
+            <a href="/dashboard" class="btn btn-ac">← Dashboard</a>
+            <a href="/logout" class="btn btn-red" style="margin-left:8px">Logout</a>
+        </div>
+    </header>
+    
+    <main>
+        <div class="stats">
+            <div class="stat-card"><div class="stat-num ac">{{ total_users }}</div><div class="stat-label">USERS</div></div>
+            <div class="stat-card"><div class="stat-num ac">{{ total_servers }}</div><div class="stat-label">SERVERS</div></div>
+            <div class="stat-card"><div class="stat-num ac">{{ running_servers }}</div><div class="stat-label">RUNNING</div></div>
+            <div class="stat-card"><div class="stat-num gold">${{ "%.2f"|format(total_revenue) }}</div><div class="stat-label">REVENUE</div></div>
+            <div class="stat-card"><div class="stat-num green">{{ redeem_codes|length }}</div><div class="stat-label">REDEEM CODES</div></div>
+            <div class="stat-card"><div class="stat-num ac">{{ coupons|length }}</div><div class="stat-label">COUPONS</div></div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('users',this)">👥 Users</button>
+            <button class="tab" onclick="switchTab('redeem',this)">🎫 Redeem</button>
+            <button class="tab" onclick="switchTab('coupons',this)">🏷️ Coupons</button>
+            <button class="tab" onclick="switchTab('balance',this)">💰 Balance</button>
+            <button class="tab" onclick="switchTab('transactions',this)">📊 Transactions</button>
+            <button class="tab" onclick="switchTab('logs',this)">📋 Logs</button>
+            <button class="tab" onclick="switchTab('servers',this)">🖥️ Servers</button>
+        </div>
+        
+        <!-- Users Tab -->
+        <div id="tab-users" class="tab-panel active">
+            <div class="section">
+                <div class="section-title">👥 USERS</div>
+                <table>
+                    <tr><th>Username</th><th>Plan</th><th>Servers</th><th>Balance</th><th>Status</th><th>Actions</th></tr>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u[1] }}{% if u[5] %} ⭐{% endif %}</td>
+                        <td><span class="badge">{{ u[3] }}</span></td>
+                        <td>{{ u[4] }}</td>
+                        <td><span class="badge gold">${{ "%.2f"|format(u[12] or 0) }}</span></td>
+                        <td>{% if u[6] %}<span class="badge banned">BANNED</span>{% else %}<span class="badge running">ACTIVE</span>{% endif %}</td>
+                        <td>
+                            {% if u[1] != 'admin' %}
+                                {% if u[6] %}
+                                <button class="btn-sm unban" onclick="userAction('{{ u[1] }}','unban')">Unban</button>
+                                {% else %}
+                                <button class="btn-sm ban" onclick="userAction('{{ u[1] }}','ban')">Ban</button>
+                                {% endif %}
+                                <button class="btn-sm admin" onclick="changePlan('{{ u[1] }}')">Plan</button>
+                                <button class="btn-sm gold" onclick="addBalance('{{ u[1] }}')">Add $</button>
+                                <button class="btn-sm ban" onclick="if(confirm('Delete {{ u[1] }}?'))userAction('{{ u[1] }}','delete')">Delete</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Redeem Codes Tab -->
+        <div id="tab-redeem" class="tab-panel">
+            <div class="section">
+                <div class="section-title">🎫 CREATE REDEEM CODE</div>
+                <div class="form-inline">
+                    <input type="number" id="redeemAmount" placeholder="Amount" value="10" style="max-width:120px">
+                    <input type="number" id="redeemMaxUses" placeholder="Max Uses" value="1" style="max-width:100px">
+                    <input type="number" id="redeemExpires" placeholder="Expires (days)" value="30" style="max-width:100px">
+                    <button class="btn btn-ac" onclick="createRedeemCode()">Generate Code</button>
+                </div>
+                <div id="newRedeemCode" style="display:none;margin-top:10px;background:var(--ac-lite);padding:10px;border-radius:8px;border:1px solid var(--ac-dim);animation:fadeIn .3s">
+                    <strong>New Code:</strong> <span id="redeemCodeDisplay" style="color:var(--ac);font-size:16px;font-weight:800"></span>
+                    <span id="redeemAmountDisplay" style="color:#fbbf24;margin-left:10px"></span>
+                    <button class="btn-sm gold" onclick="copyRedeemCode()">📋 Copy</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📋 REDEEM CODES</div>
+                <table>
+                    <tr><th>Code</th><th>Amount</th><th>Uses</th><th>Created</th><th>Expires</th><th>Status</th></tr>
+                    {% for c in redeem_codes %}
+                    <tr>
+                        <td style="color:var(--ac);font-weight:700">{{ c[1] }}</td>
+                        <td>${{ "%.2f"|format(c[2]) }}</td>
+                        <td>{{ c[6] }}/{{ c[5] }}</td>
+                        <td>{{ c[4][:10] }}</td>
+                        <td>{{ c[4] and c[4][:10] or 'Never' }}</td>
+                        <td>{% if c[7] %}<span class="badge active">Active</span>{% else %}<span class="badge inactive">Inactive</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Coupons Tab -->
+        <div id="tab-coupons" class="tab-panel">
+            <div class="section">
+                <div class="section-title">🏷️ CREATE COUPON</div>
+                <div class="form-inline">
+                    <input type="text" id="couponCode" placeholder="Code (e.g. SUMMER50)" style="max-width:150px">
+                    <select id="couponType" style="max-width:100px">
+                        <option value="percentage">% Off</option>
+                        <option value="fixed">$ Off</option>
+                    </select>
+                    <input type="number" id="couponValue" placeholder="Value" value="10" style="max-width:80px">
+                    <input type="number" id="couponMinAmount" placeholder="Min Amount" value="0" style="max-width:80px">
+                    <input type="number" id="couponMaxDiscount" placeholder="Max Discount" value="0" style="max-width:80px">
+                    <input type="number" id="couponMaxUses" placeholder="Max Uses" value="1" style="max-width:80px">
+                    <input type="number" id="couponExpires" placeholder="Days" value="30" style="max-width:80px">
+                    <button class="btn btn-ac" onclick="createCoupon()">Create</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📋 COUPONS</div>
+                <table>
+                    <tr><th>Code</th><th>Type</th><th>Value</th><th>Uses</th><th>Expires</th><th>Status</th></tr>
+                    {% for c in coupons %}
+                    <tr>
+                        <td style="color:#fbbf24;font-weight:700">{{ c[1] }}</td>
+                        <td>{{ c[2] }}</td>
+                        <td>{{ c[3] }}{% if c[2] == 'percentage' %}%{% else %}${% endif %}</td>
+                        <td>{{ c[6] }}/{{ c[5] }}</td>
+                        <td>{{ c[8][:10] if c[8] else 'Never' }}</td>
+                        <td>{% if c[7] %}<span class="badge active">Active</span>{% else %}<span class="badge inactive">Inactive</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Balance Tab -->
+        <div id="tab-balance" class="tab-panel">
+            <div class="section">
+                <div class="section-title">💰 MANAGE BALANCE</div>
+                <div class="form-inline">
+                    <input type="text" id="balanceUser" placeholder="Username" style="max-width:150px">
+                    <input type="number" id="balanceAmount" placeholder="Amount" value="10" style="max-width:100px">
+                    <input type="text" id="balanceDesc" placeholder="Description" style="flex:2">
+                    <button class="btn btn-green" onclick="manageBalance('add')">+ Add</button>
+                    <button class="btn btn-red" onclick="manageBalance('remove')">- Remove</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📊 USER BALANCES</div>
+                <table>
+                    <tr><th>User</th><th>Balance</th><th>Plan</th><th>Status</th></tr>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u[1] }}</td>
+                        <td><span class="badge gold">${{ "%.2f"|format(u[12] or 0) }}</span></td>
+                        <td>{{ u[3] }}</td>
+                        <td>{% if u[6] %}<span class="badge banned">BANNED</span>{% else %}<span class="badge running">ACTIVE</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Transactions Tab -->
+        <div id="tab-transactions" class="tab-panel">
+            <div class="section">
+                <div class="section-title">📊 TRANSACTIONS</div>
+                <table>
+                    <tr><th>User</th><th>Type</th><th>Amount</th><th>Description</th><th>Balance Before</th><th>Balance After</th><th>Date</th></tr>
+                    {% for t in transactions %}
+                    <tr>
+                        <td>{{ t[1] }}</td>
+                        <td><span class="badge {% if t[2] in ['redeem','admin_add'] %}running{% else %}banned{% endif %}">{{ t[2] }}</span></td>
+                        <td style="color:{% if t[3] >= 0 %}#22c55e{% else %}#ef4444{% endif %}">${{ "%.2f"|format(t[3]) }}</td>
+                        <td>{{ t[4] }}</td>
+                        <td>${{ "%.2f"|format(t[5] or 0) }}</td>
+                        <td>${{ "%.2f"|format(t[6] or 0) }}</td>
+                        <td>{{ t[7][:16] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Logs Tab -->
+        <div id="tab-logs" class="tab-panel">
+            <div class="section">
+                <div class="section-title">📋 ACTIVITY LOGS</div>
+                <div class="log-box">
+                    {% for a in activities %}
+                    <div>[{{ a[5][:16] }}] <strong style="color:var(--ac)">{{ a[1] }}</strong> {{ a[2] }} {{ a[3] }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Servers Tab -->
+        <div id="tab-servers" class="tab-panel">
+            <div class="section">
+                <div class="section-title">🖥️ ALL SERVERS</div>
+                <table>
+                    <tr><th>Name</th><th>Owner</th><th>Runtime</th><th>Status</th><th>Port</th><th>Created</th></tr>
+                    {% for s in servers %}
+                    <tr>
+                        <td>{{ s[1] }}</td>
+                        <td>{{ s[2] }}</td>
+                        <td>{{ s[4] }}</td>
+                        <td><span class="badge {{ s[5] }}">{{ s[5].upper() }}</span></td>
+                        <td>{{ s[7] }}</td>
+                        <td>{{ s[9][:10] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        function switchTab(tab, el) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (el) el.classList.add('active');
+        }
+        
+        async function userAction(username, action) {
+            const r = await fetch(`/admin/user/${username}/${action}`, { method: 'POST' });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else alert('Error: ' + (d.error || 'Unknown error'));
+        }
+        
+        async function changePlan(username) {
+            const plan = prompt('Enter plan (free/pro/business/enterprise):');
+            if (!plan) return;
+            const r = await fetch(`/admin/user/${username}/plan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan })
+            });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else alert('Error');
+        }
+        
+        async function addBalance(username) {
+            const amount = prompt('Enter amount to add:');
+            if (!amount || isNaN(amount)) return;
+            const r = await fetch('/admin/balance/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, amount: parseFloat(amount) })
+            });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else alert('Error: ' + d.error);
+        }
+        
+        async function manageBalance(action) {
+            const username = document.getElementById('balanceUser').value.trim();
+            const amount = parseFloat(document.getElementById('balanceAmount').value);
+            const description = document.getElementById('balanceDesc').value.trim() || (action === 'add' ? 'Admin added balance' : 'Admin removed balance');
+            if (!username) return alert('Enter username');
+            if (!amount || amount <= 0) return alert('Enter valid amount');
+            
+            const endpoint = action === 'add' ? '/admin/balance/add' : '/admin/balance/remove';
+            const r = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, amount, description })
+            });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else alert('Error: ' + d.error);
+        }
+        
+        async function createRedeemCode() {
+            const amount = parseFloat(document.getElementById('redeemAmount').value);
+            const max_uses = parseInt(document.getElementById('redeemMaxUses').value);
+            const expires_in = parseInt(document.getElementById('redeemExpires').value);
+            if (!amount || amount <= 0) return alert('Enter valid amount');
+            
+            const r = await fetch('/admin/redeem/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, max_uses, expires_in })
+            });
+            const d = await r.json();
+            if (d.success) {
+                document.getElementById('redeemCodeDisplay').textContent = d.code;
+                document.getElementById('redeemAmountDisplay').textContent = '$' + d.amount;
+                document.getElementById('newRedeemCode').style.display = 'block';
+                setTimeout(() => location.reload(), 2000);
+            } else alert('Error: ' + d.error);
+        }
+        
+        async function createCoupon() {
+            const code = document.getElementById('couponCode').value.toUpperCase();
+            const type = document.getElementById('couponType').value;
+            const value = parseFloat(document.getElementById('couponValue').value);
+            const min_amount = parseFloat(document.getElementById('couponMinAmount').value) || 0;
+            const max_discount = parseFloat(document.getElementById('couponMaxDiscount').value) || 0;
+            const max_uses = parseInt(document.getElementById('couponMaxUses').value) || 1;
+            const expires_in = parseInt(document.getElementById('couponExpires').value) || 30;
+            if (!code || !value) return alert('Code and value required');
+            
+            const r = await fetch('/admin/coupon/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, type, value, min_amount, max_discount, max_uses, expires_in })
+            });
+            const d = await r.json();
+            if (d.success) location.reload();
+            else alert('Error: ' + d.error);
+        }
+        
+        function copyRedeemCode() {
+            const code = document.getElementById('redeemCodeDisplay').textContent;
+            navigator.clipboard.writeText(code);
+            alert('Copied: ' + code);
+        }
+        
+        let hue = 270;
+        setInterval(() => {
+            hue = (hue + 6) % 360;
+            const ac = `hsl(${hue},90%,58%)`;
+            document.documentElement.style.setProperty('--ac', ac);
+            document.documentElement.style.setProperty('--ac-dim', `hsla(${hue},90%,58%,0.55)`);
+            document.documentElement.style.setProperty('--ac-lite', `hsla(${hue},90%,58%,0.10)`);
+        }, 100);
+    </script>
+</body>
+  </html>
